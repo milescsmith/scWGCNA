@@ -4,10 +4,10 @@
 \alias{plotModules}
 \title{Title}
 \usage{
-plotModules(seuratObj, modules)
+plotModules(seuratObj, modules, ...)
 }
 \arguments{
-\item{modules}{}
+\item{...}{}
 }
 \description{
 Title

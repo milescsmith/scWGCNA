@@ -25,18 +25,22 @@ clusterWGCNA <- function(seuratObj,
                          subset.ident = NULL,
                          cluster.use = NULL,
                          markers = NULL,
-                         do.return = FALSE){
-
+                         minModuleSize = 5,
+                         clustering.method = "average",
+                         do.return = TRUE) {
   options(stringsAsFactors = FALSE)
   allowWGCNAThreads()
   enableWGCNAThreads()
 
-  if (!is.null(subset.ident) & !is.null(cluster.use)){
-    obj.mat <- FetchData(seuratObj,
-                         cells.use = WhichCells(seuratObj,
-                                                subset.name = subset.ident,
-                                                accept.value = cluster.use),
-                         vars.all = rownames(seuratObj@data)
+  if (!is.null(subset.ident) & !is.null(cluster.use)) {
+    obj.mat <- FetchData(
+      seuratObj,
+      cells.use = WhichCells(
+        seuratObj,
+        subset.name = subset.ident,
+        accept.value = cluster.use
+      ),
+      vars.all = rownames(seuratObj@data)
     ) %>%
       as.data.frame()
   } else {
@@ -44,32 +48,39 @@ clusterWGCNA <- function(seuratObj,
                          vars.all = rownames(seuratObj@data))
   }
 
-  if (!is.null(group.by)){
-    seuratObj <- SetAllIdent(object = SubsetData(seuratObj,
-                                                 subset.name = subset.ident,
-                                                 accept.value = cluster.use),
-                             id = group.by)
+  if (!is.null(group.by)) {
+    seuratObj <- SetAllIdent(
+      object = SubsetData(
+        seuratObj,
+        subset.name = subset.ident,
+        accept.value = cluster.use
+      ),
+      id = group.by
+    )
   }
 
-  if (is.null(markers)){
+  if (is.null(markers)) {
     obj.markers <- FindAllMarkers(seuratObj, min.pct = 0.3)
   }
 
-  obj.mat <- obj.mat[,unique(obj.markers$gene)]
-  if (dim(obj.mat)[[2]] == 0) { stop("There is no data to analyze.") }
+  obj.mat <- obj.mat[, unique(obj.markers$gene)]
+  if (dim(obj.mat)[[2]] == 0) {
+    stop("There is no data to analyze.")
+  }
 
   powers <- c(1:10,
               seq(from = 12,
-                  to=40,
-                  by=2)
-  )
+                  to = 40,
+                  by = 2))
 
-  sft <- pickSoftThreshold(obj.mat,
-                           dataIsExpr = TRUE,
-                           powerVector = powers,
-                           corFnc = cor,
-                           corOptions = list(use = 'p'),
-                           networkType = "signed")
+  sft <- pickSoftThreshold(
+    obj.mat,
+    dataIsExpr = TRUE,
+    powerVector = powers,
+    corFnc = cor,
+    corOptions = list(use = 'p'),
+    networkType = "signed"
+  )
 
   # Plot the results
   # Scale-free topology fit index as a function of the soft-thresholding power
@@ -100,11 +111,13 @@ clusterWGCNA <- function(seuratObj,
   #   plot_grid(topology.fit.index, mean.connect, ncol = 2)
 
   # Set the soft-thresholding power
-  if (max(sft$fitIndices$SFT.R.sq) >= 0.8){
+  if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
     sft.values <- sft$fitIndices %>% dplyr::filter(SFT.R.sq >= 0.8)
-    softPower <- sft$fitIndices[which(sft$fitIndices$SFT.R.sq == min(sft.values$SFT.R.sq)) - 1,]$Power
+    softPower <-
+      sft$fitIndices[which(sft$fitIndices$SFT.R.sq == min(sft.values$SFT.R.sq)) - 1, ]$Power
   } else {
-    softPower <- which(sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq))
+    softPower <-
+      which(sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq))
   }
 
   #calclute the adjacency matrix
@@ -118,54 +131,50 @@ clusterWGCNA <- function(seuratObj,
                                TOMType = "signed",
                                power = softPower)
 
-  rownames(TOM) <- colnames(TOM) <- SubGeneNames <- colnames(obj.mat)
-  dissTOM=1-TOM
+  rownames(TOM) <-
+    colnames(TOM) <- SubGeneNames <- colnames(obj.mat)
+  dissTOM = 1 - TOM
 
   #hierarchical clustering of the genes based on the TOM dissimilarity measure
-  geneTree = flashClust(as.dist(dissTOM), method="average")
-
-  #plot the resulting clustering tree (dendrogram)
-  # plot(geneTree, xlab="", sub="", cex=0.3)
-
-  # Set the minimum module size
-  minModuleSize <- 5
+  geneTree = flashClust(as.dist(dissTOM), method = clustering.method)
 
   # Module identification using dynamic tree cut
 
-  dynamicMods <- cutreeDynamic(dendro = geneTree,  method="tree", minClusterSize = minModuleSize)
+  dynamicMods <- cutreeDynamic(dendro = geneTree,
+                               method = "tree",
+                               minClusterSize = minModuleSize)
 
-  #the following command gives the module labels and the size of each module.
-  dynamicColors = labels2colors(dynamicMods)
-
-  #Plot the module assignment under the dendrogram note.
-  # The grey color is reserved for unassigned genes
-  table(dynamicColors)
   dynamicColors <- labels2colors(dynamicMods)
 
-  plotDendroAndColors(geneTree,
-                      dynamicColors,
-                      "Dynamic Tree Cut",
-                      dendroLabels = FALSE,
-                      hang = 0.03,
-                      addGuide = TRUE,
-                      guideHang = 0.05,
-                      main = "Gene dendrogram and module colors")
+  plotDendroAndColors(
+    geneTree,
+    dynamicColors,
+    "Dynamic Tree Cut",
+    dendroLabels = FALSE,
+    hang = 0.03,
+    addGuide = TRUE,
+    guideHang = 0.05,
+    main = "Gene dendrogram and module colors"
+  )
 
   #set the diagonal of the dissimilarity to NA
   diag(dissTOM) = NA
 
   #Visualize the Tom plot. Raise the dissimilarity matrix to a power  to bring out the module structure
-  TOMplot(dissTOM^4, geneTree, as.character(dynamicColors))
+  TOMplot(dissTOM ^ 4, geneTree, as.character(dynamicColors))
 
   module_colors <- setdiff(unique(dynamicColors), "grey")
-  modules <- lapply(module_colors, function(x){SubGeneNames[which(dynamicColors==x)]})
+  modules <-
+    lapply(module_colors, function(x) {
+      SubGeneNames[which(dynamicColors == x)]
+    })
   names(modules) <- module_colors
 
   # module.order <- unlist(tapply(1:ncol(obj.mat),as.factor(dynamicColors),I))
   # m < -t(t(obj.mat[,module.order])/apply(obj.mat[,module.order],2,max))
   #heatmaply(t(m),zlim=c(0,1),col=gray.colors(100),Rowv=NA,Colv=NA,scale="none",RowSideColors=dynamicColors[module.order])
 
-  if (do.return){
+  if (do.return) {
     return(modules)
   }
 }
@@ -174,6 +183,7 @@ clusterWGCNA <- function(seuratObj,
 #'
 #' @param seuratObj
 #' @param modules
+#' @param ...
 #'
 #' @import ggplot2
 #' @import magrittr
@@ -184,15 +194,20 @@ clusterWGCNA <- function(seuratObj,
 #' @export
 #'
 #' @examples
-plotModules <- function(seuratObj, modules){
+plotModules <- function(seuratObj, modules, ...) {
   modplots = lapply((1:length(modules)),
-                    function(x) { bp <- bubbleplot(seuratObj = seuratObj,
-                                                   genes.plot = modules[[x]],
-                                                   do.return = TRUE) +
-                      labs(title = names(modules)[[x]]) +
-                      xlab(NULL) +
-                      ylab(NULL) +
-                      theme(legend.position="none")})
+                    function(x) {
+                      bp <- bubbleplot(
+                        seuratObj = seuratObj,
+                        genes.plot = modules[[x]],
+                        do.return = TRUE,
+                        ...
+                      ) +
+                        labs(title = names(modules)[[x]]) +
+                        xlab(NULL) +
+                        ylab(NULL) +
+                        theme(legend.position = "none")
+                    })
 
   grid.arrange(grobs = modplots)
 }

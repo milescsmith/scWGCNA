@@ -5,7 +5,8 @@
 \title{Title}
 \usage{
 clusterWGCNA(seuratObj, group.by = NULL, subset.ident = NULL,
-  cluster.use = NULL, markers = NULL, do.return = FALSE)
+  cluster.use = NULL, markers = NULL, minModuleSize = 5,
+  clustering.method = "average", do.return = TRUE)
 }
 \arguments{
 \item{do.return}{}
