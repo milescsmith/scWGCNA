@@ -60,10 +60,10 @@ clusterWGCNA <- function(seuratObj,
   }
 
   if (is.null(markers)) {
-    obj.markers <- FindAllMarkers(seuratObj, min.pct = 0.3)
+    markers <- FindAllMarkers(seuratObj, min.pct = 0.3)
   }
 
-  obj.mat <- obj.mat[, unique(obj.markers$gene)]
+  obj.mat <- obj.mat[, unique(markers$gene)]
   if (dim(obj.mat)[[2]] == 0) {
     stop("There is no data to analyze.")
   }
