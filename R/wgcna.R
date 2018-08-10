@@ -67,6 +67,7 @@ clusterWGCNA <- function(seuratObj,
                                                                                        value = TRUE, 
                                                                                        invert = TRUE)),
                       FALSE = FindAllMarkers(seuratObj, min.pct = 0.3)
+                     )
   }
 
   obj.mat <- obj.mat[, unique(markers$gene)]
