@@ -27,6 +27,7 @@ clusterWGCNA <- function(seuratObj,
                          markers = NULL,
                          minModuleSize = 5,
                          clustering.method = "average",
+                         filter.mito.ribo.genes = FALSE,
                          do.return = TRUE) {
   options(stringsAsFactors = FALSE)
   allowWGCNAThreads()
@@ -60,7 +61,12 @@ clusterWGCNA <- function(seuratObj,
   }
 
   if (is.null(markers)) {
-    markers <- FindAllMarkers(seuratObj, min.pct = 0.3)
+    markers <- switch(filter.mito.ribo.genes,
+                      TRUE = FindAllMarkers(seuratObj, min.pct = 0.3, genes.use = grep(x = rownames(seuratObj@data), 
+                                                                                       pattern = "^MT-|RP[LS]", 
+                                                                                       value = TRUE, 
+                                                                                       invert = TRUE)),
+                      FALSE = FindAllMarkers(seuratObj, min.pct = 0.3)
   }
 
   obj.mat <- obj.mat[, unique(markers$gene)]
