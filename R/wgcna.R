@@ -61,12 +61,12 @@ clusterWGCNA <- function(seuratObj,
   }
 
   if (is.null(markers)) {
-    markers <- switch(filter.mito.ribo.genes,
-                      TRUE = FindAllMarkers(seuratObj, min.pct = 0.3, genes.use = grep(x = rownames(seuratObj@data), 
+    markers <- switch(as.character(filter.mito.ribo.genes),
+                      "TRUE" = FindAllMarkers(seuratObj, min.pct = 0.3, genes.use = grep(x = rownames(seuratObj@data), 
                                                                                        pattern = "^MT-|RP[LS]", 
                                                                                        value = TRUE, 
                                                                                        invert = TRUE)),
-                      FALSE = FindAllMarkers(seuratObj, min.pct = 0.3)
+                      "FALSE" = FindAllMarkers(seuratObj, min.pct = 0.3)
                      )
   }
 
