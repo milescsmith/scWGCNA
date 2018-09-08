@@ -25,7 +25,7 @@ seuratClusterWGCNA <- function(seuratObj,
                                min.module.size = 50,
                                filter.mito.ribo.genes = FALSE) {
 
-    options(stringsAsFactors = FALSE)
+  options(stringsAsFactors = FALSE)
   WGCNA::allowWGCNAThreads()
 
   seuratObj.data <- as.matrix(seuratObj@data) %>%
