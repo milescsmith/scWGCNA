@@ -7,6 +7,8 @@
 #' @param filter.mito.ribo.genes
 #' @param assay.use
 #' @param slot.use
+#' @param merge.similar.modules
+#' @param merge.similarity.threshold
 #'
 #' @import dplyr
 #' @importFrom Seurat FetchData WhichCells SetAllIdent SubsetData FindAllMarkers
@@ -130,7 +132,7 @@ seuratClusterWGCNA <- function(seuratObj,
   print(glue("Module identification using dynamic tree cut..."))
   dynamicMods <- cutreeDynamic(dendro = geneTree,
                                method = "hybrid",
-                               minClusterSize = minModuleSize,
+                               minClusterSize = min.module.size,
                                distM = dissTOM,
                                deepSplit = 3,
                                pamRespectsDendro = FALSE
