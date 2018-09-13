@@ -4,11 +4,13 @@
 \alias{seuratClusterWGCNA}
 \title{Title}
 \usage{
-seuratClusterWGCNA(seuratObj, min.module.size = 50,
-  filter.mito.ribo.genes = FALSE)
+seuratClusterWGCNA(seuratObj, min.module.size = 50, minFraction = 0.25,
+  filter.mito.ribo.genes = FALSE, assay.use = NULL,
+  slot.use = "data", merge.similar.modules = FALSE,
+  merge.similarity.threshold = 0.25)
 }
 \arguments{
-\item{filter.mito.ribo.genes}{}
+\item{slot.use}{}
 }
 \description{
 Title

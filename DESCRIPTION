@@ -1,7 +1,7 @@
 Package: seuratWGCNA
 Type: Package
 Title: seuratWGCNA
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Miles", "Smith", email = "miles-smith@omrf.org", role = c("aut", "cre"))
 Maintainer: Miles Smith <miles-smith@omrf.org>
 Description: Performs Weighted Gene Co-expression Network Analysis on scRNA-seq data stored
@@ -9,13 +9,15 @@ Description: Performs Weighted Gene Co-expression Network Analysis on scRNA-seq 
 Depends: R (>= 3.5.1),
     magrittr,
     dplyr,
+    glue,
     Seurat,
     WGCNA,
     flashClust,
     ggplot2,
     gridExtra,
     dynamicTreeCut,
-    seuratBubblePlot
+    seuratBubblePlot,
+    stats
 License: BSD-3
 Encoding: UTF-8
 LazyData: true
