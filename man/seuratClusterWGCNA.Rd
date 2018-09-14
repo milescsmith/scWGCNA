@@ -2,7 +2,7 @@
 % Please edit documentation in R/clusterWGCNA.R
 \name{seuratClusterWGCNA}
 \alias{seuratClusterWGCNA}
-\title{Title}
+\title{seuratClusterWGCNA}
 \usage{
 seuratClusterWGCNA(seuratObj, min.module.size = 50, minFraction = 0.25,
   filter.mito.ribo.genes = FALSE, assay.use = NULL,
@@ -10,10 +10,23 @@ seuratClusterWGCNA(seuratObj, min.module.size = 50, minFraction = 0.25,
   merge.similarity.threshold = 0.25)
 }
 \arguments{
-\item{slot.use}{}
+\item{seuratObj}{Processed Seurat scRNAseq object}
+
+\item{min.module.size}{Minimum number of genes needed to form an expression module. Default: 50.}
+
+\item{filter.mito.ribo.genes}{Should mitochondrial and ribosomal genes be removed? Default: FALSE}
+
+\item{assay.use}{Instead of using expression data from the obj@data slot, use data stored in the obj@assay slot}
+
+\item{slot.use}{Assay data slot to use (i.e. "raw.data", "data", or "scale.data").  Default: 'data'}
+
+\item{merge.similar.modules}{Should similar modules be merged?}
+
+\item{merge.similarity.threshold}{Dissimilarity (i.e., 1-correlation) cutoff used to determine if modules should be merged.}
 }
 \description{
-Title
+Perform Weighted Gene Co-expression Network Analysis on scRNAseq data
+in a Seurat object
 }
 \examples{
 

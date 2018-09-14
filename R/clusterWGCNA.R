@@ -1,14 +1,18 @@
-# Most of this code is taken from the tutorial at https://hms-dbmi.github.io/scw/WGCNA.html
+# This code is adapted from the tutorial at
+# https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/
 # Plotting additions and interface with Seurat are from me
-#' Title
+#' @title seuratClusterWGCNA
 #'
-#' @param seuratObj
-#' @param min.module.size
-#' @param filter.mito.ribo.genes
-#' @param assay.use
-#' @param slot.use
-#' @param merge.similar.modules
-#' @param merge.similarity.threshold
+#' @description Perform Weighted Gene Co-expression Network Analysis on scRNAseq data
+#' in a Seurat object
+#'
+#' @param seuratObj Processed Seurat scRNAseq object
+#' @param min.module.size Minimum number of genes needed to form an expression module. Default: 50.
+#' @param filter.mito.ribo.genes Should mitochondrial and ribosomal genes be removed? Default: FALSE
+#' @param assay.use Instead of using expression data from the obj@data slot, use data stored in the obj@assay slot
+#' @param slot.use Assay data slot to use (i.e. "raw.data", "data", or "scale.data").  Default: 'data'
+#' @param merge.similar.modules Should similar modules be merged?
+#' @param merge.similarity.threshold Dissimilarity (i.e., 1-correlation) cutoff used to determine if modules should be merged.
 #'
 #' @import dplyr
 #' @importFrom Seurat FetchData WhichCells SetAllIdent SubsetData FindAllMarkers
@@ -61,8 +65,8 @@ seuratClusterWGCNA <- function(seuratObj,
                               x = colnames(datExpr),
                               value = TRUE,
                               invert = TRUE
-                              )
-                       ]
+    )
+    ]
   }
 
   # Choose a set of soft-thresholding powers
@@ -151,7 +155,7 @@ seuratClusterWGCNA <- function(seuratObj,
   #                            )
 
   #set the diagonal of the dissimilarity to NA
-  diag(dissTOM) <- NA
+  # diag(dissTOM) <- NA
 
   # Visualize the TOM plot.
   # Raise the dissimilarity matrix to a power
@@ -167,6 +171,7 @@ seuratClusterWGCNA <- function(seuratObj,
 
   names(modules) <- module_colors
 
+  print(glue("Calculating module eigengenes..."))
   MEList <- moduleEigengenes(expr = datExpr,
                              colors = dynamicColors,
                              softPower = softPower)
@@ -174,14 +179,14 @@ seuratClusterWGCNA <- function(seuratObj,
 
   if (isTRUE(merge.similar.modules)){
     print(glue("Prior to merging, found {length(modules)} modules."))
-    # Calculate dissimilarity of module eigengenes
+    print(glue("Calculate dissimilarity of module eigengenes"))
     MEDiss <- 1 - WGCNA::bicor(MEs,
                                use = 'pairwise.complete.obs')
     # Cluster module eigengenes
     METree <- hclust(as.dist(MEDiss),
-                    method = "complete")
+                     method = "complete")
 
-    # Call an automatic merging function
+    print(glue("Merging similar modules..."))
     merge <- mergeCloseModules(exprData = datExpr,
                                colors = dynamicColors,
                                corFnc = "bicor",
@@ -204,19 +209,15 @@ seuratClusterWGCNA <- function(seuratObj,
     })
 
     names(mergedModules) <- unique(moduleColors)
+    modules <- mergedModules
   } else {
     print(glue("Found {length(modules)} modules."))
   }
 
-  return(list("plots" = list(topology.fit.index,
-                             mean.connect,
-                             pdc,
-                             tmp
-                             ),
-              "modules" = modules,
+  return(list("modules" = modules,
               "moduleEigengenes" = MEs,
               "adjacency.matrix" = adj,
               "exprMatrix" = datExpr
-              )
-         )
+  )
+  )
 }
