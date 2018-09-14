@@ -133,7 +133,7 @@ seuratClusterWGCNA <- function(seuratObj,
     ) +
     theme(legend.position = "none")
 
-  if (!is.na(sft$powerEstimate){
+  if (!is.na(sft$powerEstimate)){
     softPower <- sft$powerEstimate  
   } else {
     if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
