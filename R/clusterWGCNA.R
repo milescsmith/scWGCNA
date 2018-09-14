@@ -204,6 +204,7 @@ seuratClusterWGCNA <- function(seuratObj,
     })
 
     names(mergedModules) <- unique(moduleColors)
+    modules <- mergedModules
   } else {
     print(glue("Found {length(modules)} modules."))
   }
