@@ -133,14 +133,19 @@ seuratClusterWGCNA <- function(seuratObj,
     ) +
     theme(legend.position = "none")
 
-  if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
-    sft.values <- sft$fitIndices %>%
-      dplyr::filter(SFT.R.sq >= 0.8)
-    softPower <- sft$fitIndices[which(sft$fitIndices$SFT.R.sq ==
-      min(sft.values$SFT.R.sq)) - 1, ]$Power
+  if (!is.na(sft$powerEstimate){
+    softPower <- sft$powerEstimate  
   } else {
-    softPower <- which(sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq))
+    if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
+      sft.values <- sft$fitIndices %>%
+        dplyr::filter(SFT.R.sq >= 0.8)
+      softPower <- sft$fitIndices[which(sft$fitIndices$SFT.R.sq ==
+        min(sft.values$SFT.R.sq)) - 1, ]$Power
+    } else {
+      softPower <- which(sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq))
+    }  
   }
+  
 
   print(glue("Using {softPower} for softPower"))
 
