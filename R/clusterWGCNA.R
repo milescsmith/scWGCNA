@@ -153,7 +153,7 @@ seuratClusterWGCNA <- function(seuratObj,
   #                            guideHang = 0.05,
   #                            main = "Gene dendrogram and module colors"
   #                            )
-
+  
   #set the diagonal of the dissimilarity to NA
   # diag(dissTOM) <- NA
 
@@ -161,7 +161,7 @@ seuratClusterWGCNA <- function(seuratObj,
   # Raise the dissimilarity matrix to a power
   # to bring out the module structure
   # tmp <- TOMplot(dissTOM ^ 4, geneTree, as.character(dynamicColors))
-
+  
   print(glue("Assembling modules"))
   module_colors <- unique(dynamicColors)
 
