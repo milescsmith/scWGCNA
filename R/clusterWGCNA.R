@@ -14,6 +14,8 @@
 #' @param minFraction When determining genes to keep, what is the minimum
 #' fraction of samples a gene must be detected in before being remove?
 #' Default: 0.25
+#' @param use.scaled Use data from the obj@scale.data slot
+#' @param use.raw Use data from the obj@raw.data slot
 #' @param assay.use Instead of using expression data from the obj@data slot,
 #' use data stored in the obj@assay slot
 #' @param slot.use Assay data slot to use (i.e. "raw.data", "data", or
@@ -44,6 +46,8 @@ seuratClusterWGCNA <- function(seuratObj,
                                min.module.size = 50,
                                minFraction = 0.25,
                                filter.mito.ribo.genes = FALSE,
+                               use.scaled = FALSE,
+                               use.raw = FALSE,
                                assay.use = NULL,
                                slot.use = "data",
                                merge.similar.modules = FALSE,
@@ -59,9 +63,11 @@ seuratClusterWGCNA <- function(seuratObj,
       dplyr::na_if(y = 0) %>%
       t()
   } else {
-    seuratObj.data <- as.matrix(seuratObj@data) %>%
-      dplyr::na_if(y = 0) %>%
-      t()
+    seuratObj.data <- FetchData(object = seuratObj,
+                                vars.all = rownames(seuratObj@raw.data),
+                                use.scaled = use.scaled,
+                                use.raw = use.raw) %>%
+      dplyr::na_if(y = 0)
   }
 
   names(seuratObj.data) <- colnames(seuratObj.data)

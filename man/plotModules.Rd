@@ -2,13 +2,20 @@
 % Please edit documentation in R/plotModules.R
 \name{plotModules}
 \alias{plotModules}
-\title{Title}
+\title{plotModules}
 \usage{
 plotModules(seuratObj, modules, ...)
 }
 \arguments{
-\item{...}{}
+\item{modules}{Gene expression modules to plot, as determined by
+seuratClusterWGCNA}
+
+\item{...}{Additional arguments to pass to bubbleplot}
+}
+\value{
+ggplot2 plots
 }
 \description{
-Title
+Use a bubbleplot to display expression levels and percentage for
+genes identified as functioning within a network module.
 }
