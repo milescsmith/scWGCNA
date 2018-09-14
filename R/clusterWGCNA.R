@@ -149,15 +149,15 @@ seuratClusterWGCNA <- function(seuratObj,
   #                            guideHang = 0.05,
   #                            main = "Gene dendrogram and module colors"
   #                            )
-
+  
   #set the diagonal of the dissimilarity to NA
-  diag(dissTOM) <- NA
+  # diag(dissTOM) <- NA
 
   # Visualize the TOM plot.
   # Raise the dissimilarity matrix to a power
   # to bring out the module structure
   # tmp <- TOMplot(dissTOM ^ 4, geneTree, as.character(dynamicColors))
-
+  
   print(glue("Assembling modules"))
   module_colors <- unique(dynamicColors)
 
@@ -167,6 +167,7 @@ seuratClusterWGCNA <- function(seuratObj,
 
   names(modules) <- module_colors
 
+  print(glue("Calculating module eigengenes..."))
   MEList <- moduleEigengenes(expr = datExpr,
                              colors = dynamicColors,
                              softPower = softPower)
@@ -174,14 +175,14 @@ seuratClusterWGCNA <- function(seuratObj,
 
   if (isTRUE(merge.similar.modules)){
     print(glue("Prior to merging, found {length(modules)} modules."))
-    # Calculate dissimilarity of module eigengenes
+    print(glue("Calculate dissimilarity of module eigengenes"))
     MEDiss <- 1 - WGCNA::bicor(MEs,
                                use = 'pairwise.complete.obs')
     # Cluster module eigengenes
     METree <- hclust(as.dist(MEDiss),
                     method = "complete")
 
-    # Call an automatic merging function
+    print(glue("Merging similar modules..."))
     merge <- mergeCloseModules(exprData = datExpr,
                                colors = dynamicColors,
                                corFnc = "bicor",
@@ -209,12 +210,7 @@ seuratClusterWGCNA <- function(seuratObj,
     print(glue("Found {length(modules)} modules."))
   }
 
-  return(list("plots" = list(topology.fit.index,
-                             mean.connect,
-                             pdc,
-                             tmp
-                             ),
-              "modules" = modules,
+  return(list("modules" = modules,
               "moduleEigengenes" = MEs,
               "adjacency.matrix" = adj,
               "exprMatrix" = datExpr
