@@ -139,9 +139,9 @@ seuratClusterWGCNA <- function(seuratObj,
     ) +
     theme(legend.position = "none")
 
-  if (!is.na(sft$powerEstimate)){
-    softPower <- sft$powerEstimate
-   } else if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
+  plot_grid(topology.fit.index, mean.connect)
+
+  if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
     sft.values <- sft$fitIndices %>%
       dplyr::filter(SFT.R.sq >= 0.8)
     softPower <- sft$fitIndices[which(sft$fitIndices$SFT.R.sq ==
