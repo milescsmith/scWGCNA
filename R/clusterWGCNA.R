@@ -41,17 +41,14 @@
 #'
 #' @param object
 #' @param min.module.size
-
-utils::globalVariables(c("Power","slope","SFT.R.sq","mean.k"))
-
 scWGCNA <- function(object,
-                               min.module.size = 50,
-                               minFraction = 0.25,
-                               filter_mito_ribo_genes = FALSE,
-                               assay_use = NULL,
-                               slot_use = NULL,
-                               merge_similar_modules = FALSE,
-                               merge_similarity_threshold = 0.25) {
+                    min.module.size = 50,
+                    minFraction = 0.25,
+                    filter_mito_ribo_genes = FALSE,
+                    assay_use = NULL,
+                    slot_use = NULL,
+                    merge_similar_modules = FALSE,
+                    merge_similarity_threshold = 0.25) {
 
   object_data <- GatherData(object = object,
                          assay = assay_use,
