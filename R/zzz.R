@@ -1,0 +1,2 @@
+options(stringsAsFactors = FALSE)
+allowWGCNAThreads()

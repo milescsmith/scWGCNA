@@ -1,2 +1,8 @@
+^git$
+^\.gitignore$
+^\.Rhistory$
+^\.RData$
+^\.Rproj$
+^scWGCNA\.Rproj$
 ^.*\.Rproj$
 ^\.Rproj\.user$

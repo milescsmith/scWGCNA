@@ -1,34 +1,34 @@
 # This code is adapted from the tutorial at
 # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/
 # Plotting additions and interface with Seurat are from me
-#' @title seuratClusterWGCNA
+#' @title scWGCNA
 #'
 #' @description Perform Weighted Gene Co-expression Network Analysis on scRNAseq
 #' data in a Seurat object
 #'
-#' @param seuratObj Processed Seurat scRNAseq object
+#' @param object Processed scRNAseq object
 #' @param min.module.size Minimum number of genes needed to form an expression
 #' module. Default: 50.
-#' @param filter.mito.ribo.genes Should mitochondrial and ribosomal genes be
+#' @param filter_mito_ribo_genes Should mitochondrial and ribosomal genes be
 #' removed? Default: FALSE
 #' @param minFraction When determining genes to keep, what is the minimum
 #' fraction of samples a gene must be detected in before being remove?
 #' Default: 0.25
-#' @param use.scaled Use data from the obj@scale.data slot
-#' @param use.raw Use data from the obj@raw.data slot
-#' @param assay.use Instead of using expression data from the obj@data slot,
+#' @param assay_use Instead of using expression data from the obj@data slot,
 #' use data stored in the obj@assay slot
-#' @param slot.use Assay data slot to use (i.e. "raw.data", "data", or
+#' @param slot_use Assay data slot to use (i.e. "raw.data", "data", or
 #' "scale.data").  Default: 'data'
-#' @param merge.similar.modules Should similar modules be merged? Default: FALSE
-#' @param merge.similarity.threshold Dissimilarity (i.e., 1-correlation) cutoff
+#' @param merge_similar_modules Should similar modules be merged? Default: FALSE
+#' @param merge_similarity_threshold Dissimilarity (i.e., 1-correlation) cutoff
 #' used to determine if modules should be merged. Default: 0.25
 #'
-#' @import dplyr
-#' @importFrom Seurat FetchData WhichCells SetAllIdent SubsetData FindAllMarkers
-#' @importFrom WGCNA pickSoftThreshold adjacency TOMsimilarityFromExpr
-#' labels2colors plotDendroAndColors TOMplot bicor
-#' @importFrom flashClust flashClust
+#' @importFrom dplyr filter na_if
+#' @importFrom ggplot2 ggplot geom_text geom_hline theme labs geom_text aes
+#' @importFrom cowplot plot_grid
+#' @importFrom WGCNA pickSoftThreshold adjacency TOMsimilarityFromExpr TOMsimilarity
+#' labels2colors plotDendroAndColors TOMplot bicor allowWGCNAThreads goodSamplesGenes
+#' mergeCloseModules moduleEigengenes
+#' @importFrom flashClust flashClust hclust
 #' @importFrom dynamicTreeCut cutreeDynamic
 #' @importFrom stats as.dist
 #' @importFrom glue glue
@@ -39,45 +39,34 @@
 #'
 #' @examples
 #'
-#' @param seuratObj
+#' @param object
 #' @param min.module.size
 
-seuratClusterWGCNA <- function(seuratObj,
+utils::globalVariables(c("Power","slope","SFT.R.sq","mean.k"))
+
+scWGCNA <- function(object,
                                min.module.size = 50,
                                minFraction = 0.25,
-                               filter.mito.ribo.genes = FALSE,
-                               use.scaled = FALSE,
-                               use.raw = FALSE,
-                               assay.use = NULL,
-                               slot.use = "data",
-                               merge.similar.modules = FALSE,
-                               merge.similarity.threshold = 0.25) {
-  options(stringsAsFactors = FALSE)
-  WGCNA::allowWGCNAThreads()
+                               filter_mito_ribo_genes = FALSE,
+                               assay_use = NULL,
+                               slot_use = NULL,
+                               merge_similar_modules = FALSE,
+                               merge_similarity_threshold = 0.25) {
 
-  if (!is.null(assay.use)) {
-    seuratObj.data <- GetAssayData(seuratObj,
-      assay.type = assay.use,
-      slot = slot.use
-    ) %>%
-      dplyr::na_if(y = 0) %>%
-      t()
-  } else {
-    seuratObj.data <- FetchData(object = seuratObj,
-                                vars.all = rownames(seuratObj@raw.data),
-                                use.scaled = use.scaled,
-                                use.raw = use.raw) %>%
-      dplyr::na_if(y = 0)
-  }
+  object_data <- GatherData(object = object,
+                         assay = assay_use,
+                         slot_use = slot_use) %>%
+    na_if(y = 0) %>%
+    t()
 
-  names(seuratObj.data) <- colnames(seuratObj.data)
-  gsg <- goodSamplesGenes(seuratObj.data,
-    minFraction = minFraction,
-    verbose = 6
+  names(object_data) <- colnames(object_data)
+  gsg <- goodSamplesGenes(object_data,
+                          minFraction = minFraction,
+                          verbose = 6
   )
-  datExpr <- seuratObj.data[gsg$goodSamples, gsg$goodGenes]
+  datExpr <- object_data[gsg$goodSamples, gsg$goodGenes]
 
-  if (isTRUE(filter.mito.ribo.genes)) {
+  if (isTRUE(filter_mito_ribo_genes)) {
     datExpr <- datExpr[, grep(
       pattern = "^MT|RP[LS]|MALAT",
       x = colnames(datExpr),
@@ -143,23 +132,23 @@ seuratClusterWGCNA <- function(seuratObj,
 
   if (max(sft$fitIndices$SFT.R.sq) >= 0.8) {
     sft.values <- sft$fitIndices %>%
-      dplyr::filter(SFT.R.sq >= 0.8)
+      filter(SFT.R.sq >= 0.8)
     softPower <- sft$fitIndices[which(sft$fitIndices$SFT.R.sq ==
-      min(sft.values$SFT.R.sq)) - 1, ]$Power
+                                        min(sft.values$SFT.R.sq)) - 1, ]$Power
   } else {
     softPower <- which(sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq))
   }
 
-  print(glue("Using {softPower} for softPower"))
+  message(glue("Using {softPower} for softPower"))
 
-  print(glue("Calculating adjacency matrix..."))
+  message(glue("Calculating adjacency matrix..."))
   adj <- adjacency(datExpr,
-    type = "signed",
-    power = softPower,
-    corFnc = "bicor"
+                   type = "signed",
+                   power = softPower,
+                   corFnc = "bicor"
   )
 
-  print(glue("Turning adjacency into topological overlap..."))
+  message(glue("Turning adjacency into topological overlap..."))
   TOM <- TOMsimilarity(
     adjMat = adj,
     TOMType = "signed",
@@ -170,11 +159,11 @@ seuratClusterWGCNA <- function(seuratObj,
   rownames(TOM) <- colnames(TOM) <- SubGeneNames <- colnames(datExpr)
   dissTOM <- 1 - TOM
 
-  print(glue("Hierarchical clustering of the genes based on the
+  message(glue("Hierarchical clustering of the genes based on the
              TOM dissimilarity measure..."))
   geneTree <- flashClust(d = as.dist(dissTOM))
 
-  print(glue("Module identification using dynamic tree cut..."))
+  message(glue("Module identification using dynamic tree cut..."))
   dynamicMods <- cutreeDynamic(
     dendro = geneTree,
     method = "hybrid",
@@ -204,7 +193,7 @@ seuratClusterWGCNA <- function(seuratObj,
   # to bring out the module structure
   # tmp <- TOMplot(dissTOM ^ 4, geneTree, as.character(dynamicColors))
 
-  print(glue("Assembling modules"))
+  message(glue("Assembling modules"))
   module_colors <- unique(dynamicColors)
 
   modules <- lapply(module_colors, function(x) {
@@ -213,7 +202,7 @@ seuratClusterWGCNA <- function(seuratObj,
 
   names(modules) <- module_colors
 
-  print(glue("Calculating module eigengenes..."))
+  message(glue("Calculating module eigengenes..."))
   MEList <- moduleEigengenes(
     expr = datExpr,
     colors = dynamicColors,
@@ -221,23 +210,23 @@ seuratClusterWGCNA <- function(seuratObj,
   )
   MEs <- MEList$eigengenes
 
-  if (isTRUE(merge.similar.modules)) {
+  if (isTRUE(merge_similar_modules)) {
     print(glue("Prior to merging, found {length(modules)} modules."))
     print(glue("Calculate dissimilarity of module eigengenes"))
-    MEDiss <- 1 - WGCNA::bicor(MEs,
-      use = "pairwise.complete.obs"
+    MEDiss <- 1 - bicor(MEs,
+                        use = "pairwise.complete.obs"
     )
     # Cluster module eigengenes
     METree <- hclust(as.dist(MEDiss),
-      method = "complete"
+                     method = "complete"
     )
 
-    print(glue("Merging similar modules..."))
+    message(glue("Merging similar modules..."))
     merge <- mergeCloseModules(
       exprData = datExpr,
       colors = dynamicColors,
       corFnc = "bicor",
-      cutHeight = merge.similarity.threshold,
+      cutHeight = merge_similarity_threshold,
       verbose = 3
     )
 
@@ -257,7 +246,7 @@ seuratClusterWGCNA <- function(seuratObj,
     names(mergedModules) <- unique(moduleColors)
     modules <- mergedModules
   } else {
-    print(glue("Found {length(modules)} modules."))
+    message(glue("Found {length(modules)} modules."))
   }
 
   return(list(

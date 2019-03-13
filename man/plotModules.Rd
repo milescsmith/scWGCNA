@@ -4,16 +4,18 @@
 \alias{plotModules}
 \title{plotModules}
 \usage{
-plotModules(seuratObj, modules, ...)
+plotModules(object, modules, ...)
 }
 \arguments{
+\item{object}{scRNA-seq data object}
+
 \item{modules}{Gene expression modules to plot, as determined by
 seuratClusterWGCNA}
 
 \item{...}{Additional arguments to pass to bubbleplot}
 }
 \value{
-ggplot2 plots
+gg
 }
 \description{
 Use a bubbleplot to display expression levels and percentage for

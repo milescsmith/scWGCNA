@@ -1,12 +1,22 @@
-Package: seuratWGCNA
+Package: scWGCNA
 Type: Package
-Title: seuratWGCNA
-Version: 0.2.0
-Authors@R: person("Miles", "Smith", email = "miles-smith@omrf.org", role = c("aut", "cre"))
+Title: scWGCNA
+Version: 0.3.0
+Authors@R: 
+    person(given = "Miles",
+           family = "Smith",
+           role = c("aut", "cre"),
+           email = "miles-smith@omrf.org")
+Author: Miles Smith
 Maintainer: Miles Smith <miles-smith@omrf.org>
 Description: Performs Weighted Gene Co-expression Network Analysis on scRNA-seq data stored
-    in a Seurat object
-Depends: R (>= 3.5.1),
+  in a scRNA-seq data object (Seurat 3 or Single)
+Url: https://github.com/milescsmith/milescsmith/scWGCNA
+BugReports: https://github.com/milescsmith/milescsmith/scWGCNA/issues
+Depends: R (>= 3.5.1)
+Imports:
+    cowplot,
+    stringr,
     magrittr,
     dplyr,
     glue,
@@ -17,8 +27,17 @@ Depends: R (>= 3.5.1),
     gridExtra,
     dynamicTreeCut,
     seuratBubblePlot,
-    stats
-License: BSD-3
+    stats,
+    SummarizedExperiment,
+    purrr,
+    patchwork
+Remotes:
+    github::satijalab/seurat@release/3.0,
+    github::milescsmith/seuratBubblePlot,
+    bioc::release/SummarizedExperiment
+Enhances:
+License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.0
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.1.1
