@@ -56,6 +56,13 @@ scWGCNA <- function(object,
     na_if(y = 0) %>%
     t()
 
+  # Testing new screening method.  Maybe more appropriate for scRNA-seq datasets?
+  dr <- DetectionRate(object)
+  dr$min <- rowSums(dr)
+  dr <- dr %>% as.data.frame() %>% rownames_to_column() %>% filter(min > 0) %>% select(-min) %>% column_to_rownames()
+  datExpr <- object_data[,rownames(dr)]
+
+
   names(object_data) <- colnames(object_data)
   gsg <- goodSamplesGenes(object_data,
                           minFraction = minFraction,
@@ -140,7 +147,7 @@ scWGCNA <- function(object,
 
   message(glue("Calculating adjacency matrix..."))
   adj <- adjacency(datExpr,
-                   type = "signed",
+                   type = "signed hybrid",
                    power = softPower,
                    corFnc = "bicor"
   )
@@ -172,15 +179,15 @@ scWGCNA <- function(object,
 
   dynamicColors <- labels2colors(dynamicMods)
 
-  # pdc <- plotDendroAndColors(geneTree,
-  #                            dynamicColors,
-  #                            "Dynamic Tree Cut",
-  #                            dendroLabels = FALSE,
-  #                            hang = 0.03,
-  #                            addGuide = TRUE,
-  #                            guideHang = 0.05,
-  #                            main = "Gene dendrogram and module colors"
-  #                            )
+  pdc <- plotDendroAndColors(geneTree,
+                             dynamicColors,
+                             "Dynamic Tree Cut",
+                             dendroLabels = FALSE,
+                             hang = 0.03,
+                             addGuide = TRUE,
+                             guideHang = 0.05,
+                             main = "Gene dendrogram and module colors"
+                             )
 
   # set the diagonal of the dissimilarity to NA
   # diag(dissTOM) <- NA
